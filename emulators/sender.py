@@ -1,45 +1,36 @@
-import time
-import paho.mqtt.client as mqtt
+import ssl
+import random
+import os
+from paho.mqtt import client as mqtt
 
-def on_publish(client, userdata, mid, reason_code, properties):
-    # reason_code and properties will only be present in MQTTv5. It's always unset in MQTTv3
-    try:
-        userdata.remove(mid)
-    except KeyError:
-        print("on_publish() is called with a mid not present in unacked_publish")
-        print("This is due to an unavoidable race-condition:")
-        print("* publish() return the mid of the message sent.")
-        print("* mid from publish() is added to unacked_publish by the main thread")
-        print("* on_publish() is called by the loop_start thread")
-        print("While unlikely (because on_publish() will be called after a network round-trip),")
-        print(" this is a race-condition that COULD happen")
-        print("")
-        print("The best solution to avoid race-condition is using the msg_info from publish()")
-        print("We could also try using a list of acknowledged mid rather than removing from pending list,")
-        print("but remember that mid could be re-used !")
+DEVICE_ID = os.getenv("DEVICE_ID")
+DEVICE_TYPE = os.getenv("DEVICE_TYPE")  # тип датчика из types.yaml
 
-unacked_publish = set()
-mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-mqttc.on_publish = on_publish
+MQTT_BROKER = "mqtt.cloud.yandex.net"
+MQTT_PORT = 8883
+MQTT_TOPIC = f"$devices/{DEVICE_ID}/events"
 
-mqttc.user_data_set(unacked_publish)
-mqttc.connect("mqtt.eclipseprojects.io")
-mqttc.loop_start()
+CA_CERT = "rootCA.crt"
+CLIENT_CERT = "cert.pem"
+CLIENT_KEY = "key.pm"
 
-# Our application produce some messages
-msg_info = mqttc.publish("paho/test/topic", "my message", qos=1)
-unacked_publish.add(msg_info.mid)
 
-msg_info2 = mqttc.publish("paho/test/topic", "my message2", qos=1)
-unacked_publish.add(msg_info2.mid)
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
-# Wait for all message to be published
-while len(unacked_publish):
-    time.sleep(0.1)
+client.tls_set(
+    ca_certs=CA_CERT,
+    certfile=CLIENT_CERT,
+    keyfile=CLIENT_KEY,
+    cert_reqs=ssl.CERT_REQUIRED,
+    tls_version=ssl.PROTOCOL_TLS_CLIENT
+)
 
-# Due to race-condition described above, the following way to wait for all publish is safer
-msg_info.wait_for_publish()
-msg_info2.wait_for_publish()
-
-mqttc.disconnect()
-mqttc.loop_stop()
+client.connect(MQTT_BROKER, MQTT_PORT)
+temperature = round(random.uniform(20.0, 30.0), 2)
+payload = f'{{"temperature": {temperature}}}'
+result = client.publish(MQTT_TOPIC, payload)
+status = result[0]
+if status == 0:
+    print(f"Успешно отправлено в топик {MQTT_TOPIC}. \nСообщение:\n{payload}")
+else:
+    print(f"Не удалось отправить сообщение. \nСообщение:\n{payload}")

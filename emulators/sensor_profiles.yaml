@@ -1,0 +1,29 @@
+# Возможно использование функций через lambda. 
+# Исполняются через eval, подргужаются пакеты math и random.
+# Доступные переменные в lambda-функциях:
+# - t - текущее время, timestamp
+
+temperature_sensor:
+  # Модель среднегодовой 
+  unit: "°C"
+  lambda: "lambda t: -5 + 15 * math.sin(2 * math.pi * (t / (365*24*60*60))) + 3 * math.sin(2 * math.pi * (t % 86400) / 86400) + random.gauss(0, 1)"
+  template: {"temperature": "$value"}
+
+humidity_sensor:
+  unit: "%"
+  value_range: [30, 90]
+  template: {"humidity": "$value"}
+
+co2_sensor:
+  unit: "ppm"
+  value_range: [400, 1500]
+  template: {"co2": "$value"}
+
+wind_direction_sensor:
+  values: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+  template: {"wind_direction": "$value"}
+
+gps_sensor:
+  lat_range: [55.0, 56.0]
+  lon_range: [37.0, 38.0]
+  template: {"latitude": "$lat", "longitude": "$lon"}

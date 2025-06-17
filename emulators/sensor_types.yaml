@@ -1,0 +1,18 @@
+sensors:
+  environmental:
+    - temperature_sensor
+    - humidity_sensor
+    - air_quality_sensor
+    - co2_sensor
+    - light_sensor
+    - noise_sensor
+    - wind_speed_sensor
+    - wind_direction_sensor
+    - rainfall_sensor
+    - pressure_sensor
+  location:
+    - gps_sensor
+  power:
+    - voltage_sensor
+    - current_sensor
+    - power_consumption_sensor
