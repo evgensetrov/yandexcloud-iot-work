@@ -10,8 +10,8 @@
 
 # Примерное содержание решения:
 ### Само решение – Terraform + Gitlab CI/CD или GitHub Actions.
-0. Наборы данных для тестов – эмуляция устройств при помощи python на Yandex Cloud Functions по таймеру или на виртуалках.
+0. Наборы данных для тестов – эмуляция устройств при помощи python на Yandex Cloud Functions по таймеру (директория **emulators**)
 1. MQTT – использование Yandex IoT Core
-2. Хранение данных – CSV или JSON при помощи Cloud Functions
+2. Хранение данных – JSON при помощи Cloud Functions (директория **collecting**)
 3. Обработка – Yandex Cloud Fuctions, триггер либо по таймеру (раз в 5 минут), либо по Message Queue
 4. Визуализация – либо Grafana, либо самодел на python+matplotlib/dash
