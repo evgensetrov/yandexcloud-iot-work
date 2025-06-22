@@ -1,18 +1,20 @@
-sensors:
-  environmental:
-    - temperature_sensor
-    - humidity_sensor
-    - air_quality_sensor
-    - co2_sensor
-    - light_sensor
-    - noise_sensor
-    - wind_speed_sensor
-    - wind_direction_sensor
-    - rainfall_sensor
-    - pressure_sensor
-  location:
-    - gps_sensor
-  power:
-    - voltage_sensor
-    - current_sensor
-    - power_consumption_sensor
+# Описание всех используемых для эмуляции типов устройств.
+
+Sensors:
+  EnvironmentalSensor:
+    - Temperature
+    - Humidity
+    - AirQuality
+    - CO2
+    - Light
+    - Noise
+    - WindSpeed
+    - WindDirection
+    - Rainfall
+    - Pressure
+  LocationSensor:
+    - GPS
+  PowerSensor:
+    - Voltage
+    - Current
+    - PowerConsumption

@@ -4,15 +4,17 @@
 # - t - текущее время, timestamp
 
 temperature_sensor:
-  # Модель среднегодовой 
-  unit: "°C"
-  lambda: "lambda t: -5 + 15 * math.sin(2 * math.pi * (t / (365*24*60*60))) + 3 * math.sin(2 * math.pi * (t % 86400) / 86400) + random.gauss(0, 1)"
-  template: {"temperature": "$value"}
+  # Модель расчёта температуры.
+  # Считаем, что температура в течение дня и в течение года периодична и подчиняется законц A*sin(wt+phi).
+  # Коэффициенты примерно подобраны под условия СПб.
+  # К каждому "измерению" добавляется случанйая нормально распределенная величина со среднеквадратичным отклонением =1.
+  lambda: "lambda t: -5 + 15 * math.sin(2 * math.pi * ((t-130*86400) / (365*86400))) + 3 * math.sin(2 * math.pi * (t - 6*3600) / 86400) + 3*random.gauss(0, 1)"
+  template: {"timestamp": "$timestamp", "sensor_id": "$sensor_id", "sensor_type": "", "temperature", "unit": "°C", "data": "$value"}
 
 humidity_sensor:
-  unit: "%"
-  value_range: [30, 90]
-  template: {"humidity": "$value"}
+  # Случайная нормально распределенная величина в интервале от 0 до 100 со средним значением 60
+  lambda: "lambda: max(0, min(100, random.gauss(60, 15)))"
+  template: {"timestamp": "$timestamp", "type": "humidity", "unit": "%", "data": "$value"}
 
 co2_sensor:
   unit: "ppm"
