@@ -3,6 +3,7 @@ import datetime
 import pytz
 import boto3
 import base64
+import logging
 
 ACCESS_KEY = os.getenv("ACCESS_KEY")  # key_id из вывода при создании ключа
 SECRET_KEY = os.getenv("SECRET_KEY")  # secret из вывода
@@ -25,12 +26,18 @@ def handler(event, context):
         registry_id = details["registry_id"]
         device_id = details["device_id"]
         payload = base64.b64decode(details["payload"]).decode('utf-8')
+        timestamp = payload["timestamp"]
 
 
-        now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
+        # now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
+        now = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone(TIME_ZONE))
+        
         timestamp_str = now.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
 
+        logging.warning(timestamp_str)
+
         key = f"{registry_id}/{device_id}/{now:%Y-%m/%d}/{timestamp_str}.json"
+        logging.warning(key)
 
         s3.put_object(
             Bucket=BUCKET_NAME,
