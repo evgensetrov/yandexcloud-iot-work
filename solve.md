@@ -79,3 +79,7 @@ secret: YCNiemeT49cwCnCgtKkWM8jXZRWzvgU09xpuNtbL
 ```
 **payload** - в base64.
 
+Формат данных:
+```
+{“timestamp”:….., “SensorId”:”23232”, “SensorType”:”….”, “data”:[{“parameter”:”fwfewr”,”Unit”:”24234”,”value”:”2342342”},{“parameter”:”fwfewr”,”Unit”:”24234”,”value”:”2342342”}]}
+```
