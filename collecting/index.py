@@ -4,6 +4,7 @@ import pytz
 import boto3
 import base64
 import logging
+import json
 
 ACCESS_KEY = os.getenv("ACCESS_KEY")  # key_id из вывода при создании ключа
 SECRET_KEY = os.getenv("SECRET_KEY")  # secret из вывода
@@ -19,32 +20,35 @@ s3 = session.client(
     )
 
 def handler(event, context):
+    print(f'Начало обработки функции')
+    print(f'event: {event}')
     try:
         message = event.get("messages", [])[0]
         details = message.get("details")
 
         registry_id = details["registry_id"]
         device_id = details["device_id"]
-        payload = base64.b64decode(details["payload"]).decode('utf-8')
+        payload_str = base64.b64decode(details["payload"]).decode('utf-8')
+        payload = json.loads(payload_str)
         timestamp = payload["timestamp"]
-
 
         # now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
         now = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone(TIME_ZONE))
         
         timestamp_str = now.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
 
-        logging.warning(timestamp_str)
+        print(f'Форматированный timestamp: {timestamp_str}')
 
         key = f"{registry_id}/{device_id}/{now:%Y-%m/%d}/{timestamp_str}.json"
-        logging.warning(key)
+        print(f'Путь до объекта: {key}')
 
         s3.put_object(
             Bucket=BUCKET_NAME,
             Key=key,
-            Body=payload,
+            Body=payload_str.encode('utf-8'),
             ContentType='application/json'
         )
+        print(f"Событие успешно обработано, сообщение положено в {key}")
 
         return {
             "statusCode": 200,
@@ -52,6 +56,7 @@ def handler(event, context):
         }
 
     except Exception as e:
+        print(f'Произошла ошибка: {str(e)}')
         return {
             "statusCode": 500,
             "body": f"Ошибка: {str(e)}\n\nTrigger event: {event}"

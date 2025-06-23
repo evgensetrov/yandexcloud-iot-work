@@ -6,12 +6,12 @@ import json
 # DEVICE_ID = os.getenv("DEVICE_ID")
 # DEVICE_TYPE = os.getenv("DEVICE_TYPE")  # тип датчика из types.yaml
 
-DEVICE_ID="are8mjfvrc1ffara02di"
+DEVICE_ID="areal1og31pb568e2vfo"
 DEVICE_CLASS="EnvironmentalSensor"
 DEVICE_TYPE="Temperature"
 
 TIME_TO_EMULATE = "NOW"  # "NOW" или timestamp
-SENSOR_AMOUNT = 5  # количество сенсоров для эмуляции
+SENSOR_AMOUNT = 1  # количество сенсоров для эмуляции
 
 MQTT_BROKER = "mqtt.cloud.yandex.net"
 MQTT_PORT = 8883
@@ -135,6 +135,6 @@ else:
         ]
     }
 
-send_result = sender.main(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, json.dumps(data, indent=2))
+send_result = sender.main(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, json.dumps(data))
 print(send_result)
 
