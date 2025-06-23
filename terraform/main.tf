@@ -3,6 +3,9 @@ terraform {
      yandex = {
        source = "yandex-cloud/yandex"
      }
+     tls = {
+      source  = "hashicorp/tls"
+    }
    }
  }
   
@@ -29,9 +32,6 @@ resource "yandex_iot_core_registry" "registry" {
   folder_id   = yandex_resourcemanager_folder.folder.id
   name        = var.iot_registry_name
   description = "Реестр устройств для выполнения дипломной работы"
-  certificates = [
-    var.device_public_certificate
-  ]
 }
 
 //
@@ -72,6 +72,55 @@ resource "yandex_storage_bucket" "bucket" {
 }
 
 //
+//  Generate certificates for devices
+//
+
+// Generate private keys
+resource "tls_private_key" "device_keys" {
+  for_each = var.devices
+
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+// Generate public certificates
+resource "tls_self_signed_cert" "device_certs" {
+  for_each = var.devices
+
+  private_key_pem = tls_private_key.device_keys[each.key].private_key_pem
+
+  subject {
+    common_name = each.key
+  }
+
+  validity_period_hours = 8760  # 1 год
+  is_ca_certificate     = false
+
+  allowed_uses = [
+    "digital_signature",
+    "key_encipherment",
+    "server_auth",
+    "client_auth",
+  ]
+}
+
+// Write to files
+resource "local_file" "cert_files" {
+  for_each = var.devices
+
+  content  = tls_self_signed_cert.device_certs[each.key].cert_pem
+  filename = "${path.module}/../certificates/${each.key}.crt"
+}
+
+resource "local_file" "key_files" {
+  for_each = var.devices
+
+  content  = tls_private_key.device_keys[each.key].private_key_pem
+  filename = "${path.module}/../certificates/${each.key}.key"
+}
+
+
+//
 // Create a new IoT Core Device.
 //
 resource "yandex_iot_core_device" "device" {
@@ -80,6 +129,9 @@ resource "yandex_iot_core_device" "device" {
   registry_id = yandex_iot_core_registry.registry.id
   name        = each.key
   description = each.value.description
+  certificates = [
+    tls_self_signed_cert.device_certs[each.key].cert_pem
+  ]
 }
 
 //
@@ -122,3 +174,4 @@ resource "yandex_function_trigger" "collecting-trigger" {
     service_account_id  = yandex_iam_service_account.sa.id
   }
 }
+

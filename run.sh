@@ -9,6 +9,16 @@ echo $TF_VAR_folder_id
 echo "----- Если id не пуст, то переменные окружения подгружены корректно."
 echo ""
 
+echo "--- Попытка создания папки certificates"
+if [ -d certificates ]; then
+  echo "----- Папка уже существует"
+else
+  mkdir certificates
+fi
+echo ""
+
+cd certificates
+
 echo "--- Загрузка корневого сертификата для подключения к mqtt.cloud.yandex.net":
 if [ ! -f rootCA.crt ]; then
   wget https://storage.yandexcloud.net/mqtt/rootCA.crt
@@ -18,18 +28,20 @@ else
 fi
 echo ""
 
-echo "--- Создание пары ключей для устройств:"
-if [ ! -f key.pm ] || [ ! -f cert.pem ]; then
-  openssl req -x509 -newkey rsa:4096 -keyout key.pm -out cert.pem -nodes -days 365 -subj '/CN=localhost'
-  echo "----- Ключи созданы."
-else
-  echo "----- Файлы key.pm и cert.pem уже существуют. Если срок действия истёк - удали их из данной директории и запусти скрипт заново."
-fi
+cd ..
 
-echo "--- Помещение пары ключей в переменные окружения"
-export TF_VAR_device_public_certificate="$(cat cert.pem)"
-export TF_VAR_device_secret_certificate="$(cat key.pm)"
-echo ""
+# echo "--- Создание пары ключей для устройств:"
+# if [ ! -f key.pm ] || [ ! -f cert.pem ]; then
+#   openssl req -x509 -newkey rsa:4096 -keyout key.pm -out cert.pem -nodes -days 365 -subj '/CN=localhost'
+#   echo "----- Ключи созданы."
+# else
+#   echo "----- Файлы key.pm и cert.pem уже существуют. Если срок действия истёк - удали их из данной директории и запусти скрипт заново."
+# fi
+
+# echo "--- Помещение пары ключей в переменные окружения"
+# export TF_VAR_device_public_certificate="$(cat cert.pem)"
+# export TF_VAR_device_secret_certificate="$(cat key.pm)"
+# echo ""
 
 echo "--- Попытка удаления старых архивов collecting.zip и emulators.zip"
 rm collecting.zip
