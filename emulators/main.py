@@ -2,16 +2,18 @@ import sender
 import emulator
 import time
 import json
+import os
 
-# DEVICE_ID = os.getenv("DEVICE_ID")
-# DEVICE_TYPE = os.getenv("DEVICE_TYPE")  # тип датчика из types.yaml
+# DEVICE_ID="areal1og31pb568e2vfo"
+# DEVICE_CLASS="EnvironmentalSensor"
+# DEVICE_TYPE="Temperature"
 
-DEVICE_ID="areal1og31pb568e2vfo"
-DEVICE_CLASS="EnvironmentalSensor"
-DEVICE_TYPE="Temperature"
+DEVICE_ID = os.getenv("DEVICE_ID")
+DEVICE_CLASS = os.getenv("DEVICE_CLASS")
+DEVICE_TYPE = os.getenv("DEVICE_TYPE")
 
-TIME_TO_EMULATE = "NOW"  # "NOW" или timestamp
-SENSOR_AMOUNT = 1  # количество сенсоров для эмуляции
+TIME_TO_EMULATE = os.getenv("TIME_TO_EMULATE")  # "NOW" или timestamp
+SENSOR_AMOUNT = os.getenv("SENSOR_AMOUNT")  # количество сенсоров для эмуляции
 
 MQTT_BROKER = "mqtt.cloud.yandex.net"
 MQTT_PORT = 8883
