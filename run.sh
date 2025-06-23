@@ -62,4 +62,4 @@ fi
 echo ""
 
 echo "--- Применение terraform apply"
-terraform apply -auto-approve -parallelism=2
+terraform apply -auto-approve -parallelism=1
