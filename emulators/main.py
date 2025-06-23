@@ -13,7 +13,7 @@ DEVICE_CLASS = os.getenv("DEVICE_CLASS")
 DEVICE_TYPE = os.getenv("DEVICE_TYPE")
 
 TIME_TO_EMULATE = os.getenv("TIME_TO_EMULATE")  # "NOW" или timestamp
-SENSOR_AMOUNT = os.getenv("SENSOR_AMOUNT")  # количество сенсоров для эмуляции
+SENSOR_AMOUNT = int(os.getenv("SENSOR_AMOUNT"))  # количество сенсоров для эмуляции
 
 MQTT_BROKER = "mqtt.cloud.yandex.net"
 MQTT_PORT = 8883
@@ -94,49 +94,50 @@ unit_map = {
 
 sensor = sensor_map[DEVICE_CLASS][DEVICE_TYPE]
 
-if TIME_TO_EMULATE == "NOW":
-    values = sensor.get_values()
+def handler(event, context):
+    if TIME_TO_EMULATE == "NOW":
+        values = sensor.get_values()
 
-    data = json_data = {
-        "timestamp": time.time(),
-        "sensorId": DEVICE_ID,
-        "sensorClass": DEVICE_CLASS,
-        "sensorType": DEVICE_TYPE,
-        "data": [
-            {
-                "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
-                "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
-                "value": values[i]
-            } for i in range(len(values))
-        ]
-    }
-    
-else:
-    from datetime import datetime
-    import pytz
-    timezone = pytz.timezone("Europe/Moscow")
+        data = json_data = {
+            "timestamp": time.time(),
+            "sensorId": DEVICE_ID,
+            "sensorClass": DEVICE_CLASS,
+            "sensorType": DEVICE_TYPE,
+            "data": [
+                {
+                    "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
+                    "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
+                    "value": values[i]
+                } for i in range(len(values))
+            ]
+        }
+        
+    else:
+        from datetime import datetime
+        import pytz
+        timezone = pytz.timezone("Europe/Moscow")
 
-    try:
-        timestamp = float(TIME_TO_EMULATE)
-        time_ = datetime.fromtimestamp(timestamp, timezone)
-        values = sensor.get_values(time_)
-    except Exception as e:
-        print(f"Произошла ошибка. Проверьте, что переменная TIME_TO_EMULATE имеет тип float или значение 'NOW'.\nОшибка: {str(e)}")
+        try:
+            timestamp = float(TIME_TO_EMULATE)
+            time_ = datetime.fromtimestamp(timestamp, timezone)
+            values = sensor.get_values(time_)
+        except Exception as e:
+            print(f"Произошла ошибка. Проверьте, что переменная TIME_TO_EMULATE имеет тип float или значение 'NOW'.\nОшибка: {str(e)}")
 
-    data = json_data = {
-        "timestamp": timestamp,
-        "sensorId": DEVICE_ID,
-        "sensorClass": DEVICE_CLASS,
-        "sensorType": DEVICE_TYPE,
-        "data": [
-            {
-                "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
-                "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
-                "value": values[i]
-            } for i in range(len(values))
-        ]
-    }
+        data = json_data = {
+            "timestamp": timestamp,
+            "sensorId": DEVICE_ID,
+            "sensorClass": DEVICE_CLASS,
+            "sensorType": DEVICE_TYPE,
+            "data": [
+                {
+                    "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
+                    "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
+                    "value": values[i]
+                } for i in range(len(values))
+            ]
+        }
 
-send_result = sender.main(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, json.dumps(data))
-print(send_result)
+    send_result = sender.main(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, json.dumps(data))
+    print(send_result)
 
