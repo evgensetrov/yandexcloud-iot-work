@@ -6,6 +6,9 @@ terraform {
      tls = {
       source  = "hashicorp/tls"
     }
+    local = {
+      source = "hashicorp/local"
+    }
    }
  }
   
@@ -139,7 +142,7 @@ resource "yandex_iot_core_device" "device" {
 //
 resource "yandex_function" "collecting-function" {
   folder_id          = yandex_resourcemanager_folder.folder.id
-  name               = "iot-collecting-spring2025"
+  name               = var.iot_collecting_function_name
   description        = "Cloud Function, вызываемая по триггеру из реестра ${var.iot_collecting_function_name} и сохраняющая данные в бакет ${var.iot_bucket_name}"
   user_hash          = var.collecting_hash
   runtime            = "python312"
@@ -175,3 +178,116 @@ resource "yandex_function_trigger" "collecting-trigger" {
   }
 }
 
+//
+// Generate zip archives with emulators
+//
+
+data "local_file" "emulator_py" {
+  filename = "${path.module}/../emulators/emulator.py"
+}
+
+data "local_file" "main_py" {
+  filename = "${path.module}/../emulators/main.py"
+}
+
+data "local_file" "sender_py" {
+  filename = "${path.module}/../emulators/sender.py"
+}
+
+data "local_file" "rootCA" {
+  filename = "${path.module}/../certificates/rootCA.crt"
+}
+
+data "local_file" "requirements_txt" {
+  filename = "${path.module}/../emulators/requirements.txt"
+}
+
+
+resource "archive_file" "emulators_archives" {
+  for_each = var.devices
+
+  type        = "zip"
+  output_path = "${path.module}/../emulators-build/${each.key}.zip"
+
+  source {
+    content  = tls_private_key.device_keys[each.key].private_key_pem
+    filename = "key.pm"
+  }
+
+  source {
+    content  = tls_self_signed_cert.device_certs[each.key].cert_pem
+    filename = "cert.pem"
+  }
+
+  source {
+    content  = data.local_file.emulator_py.content
+    filename = "emulator.py"
+  }
+
+  source {
+    content  = data.local_file.main_py.content
+    filename = "main.py"
+  }
+
+  source {
+    content  = data.local_file.sender_py.content
+    filename = "sender.py"
+  }
+
+  source {
+    content  = data.local_file.requirements_txt.content
+    filename = "requirements.txt"
+  }
+
+  source {
+    content  = data.local_file.rootCA.content
+    filename = "rootCA.crt"
+  }
+
+}
+
+//
+// Create a new Yandex Cloud Function (emulators)
+//
+resource "yandex_function" "emulating-functions" {
+  for_each = var.devices
+  
+  folder_id          = yandex_resourcemanager_folder.folder.id
+  name               = "${var.iot_emulating_function_name}-${each.key}"
+  description        = "Cloud Function, эмулирующая поведение устройства ${each.key}"
+  user_hash          = archive_file.emulators_archives[each.key].output_sha256
+  runtime            = "python312"
+  entrypoint         = "main.handler"
+  memory             = "256"
+  execution_timeout  = "10"
+  service_account_id = yandex_iam_service_account.sa.id
+  # todo переделать на secrets, если будет время
+  environment = {
+    DEVICE_ID         = yandex_iot_core_device.device[each.key].id
+    DEVICE_CLASS      = each.value.class
+    DEVICE_TYPE       = each.value.type
+    TIME_TO_EMULATE   = "NOW"
+    SENSOR_AMOUNT     = each.value.amount
+  }
+  content {
+    zip_filename = "../emulators-build/${each.key}.zip"
+  }
+}
+
+//
+// Create a new Cloud Function Trigger.  (emulators)
+//
+resource "yandex_function_trigger" "emulators-trigger" {
+  for_each = var.devices
+  
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  name        = "${var.iot_emulating_trigger_name}-${each.key}"
+  description = "Триггер, вызывающий функцию ${var.iot_emulating_function_name}-${each.key}, эмулирующая устройство"
+  timer {
+    cron_expression = "* * * * ? *"
+  }
+  function {
+    id                  = yandex_function.emulating-functions[each.key].id
+    service_account_id  = yandex_iam_service_account.sa.id
+  }
+}

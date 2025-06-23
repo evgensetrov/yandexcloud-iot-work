@@ -10,7 +10,7 @@ variable "cloud_id" {
 
 variable "iot_folder_name" {
     type = string
-    default = "iot-folder-spring2025"
+    default = "iot-folder-spring2025-t2"
 }
 
 variable "iot_registry_name" {
@@ -41,7 +41,12 @@ variable "iot_collecting_trigger_name" {
 
 variable "iot_emulating_function_name" {
     type = string
-    default = "iot-emulating-function-spring2025"
+    default = "emufunc"
+}
+
+variable "iot_emulating_trigger_name" {
+    type = string
+    default = "emutrig"
 }
 
 variable "collecting_hash" {
