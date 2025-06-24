@@ -264,10 +264,10 @@ resource "yandex_function" "emulating-functions" {
   # todo переделать на secrets, если будет время
   environment = {
     DEVICE_ID         = yandex_iot_core_device.device[each.key].id
-    DEVICE_CLASS      = each.value.class
-    DEVICE_TYPE       = each.value.type
+    SENSORS_CLASSES   = each.value.class
+    SENSORS_TYPES     = each.value.type
+    SENSORS_IDS       = each.value.sensorid
     TIME_TO_EMULATE   = "NOW"
-    SENSOR_AMOUNT     = each.value.amount
   }
   content {
     zip_filename = "../emulators-build/${each.key}.zip"

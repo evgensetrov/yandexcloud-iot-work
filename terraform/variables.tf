@@ -10,7 +10,7 @@ variable "cloud_id" {
 
 variable "iot_folder_name" {
     type = string
-    default = "iot-folder-spring2025-t2"
+    default = "iot-folder-spring2025"
 }
 
 variable "iot_registry_name" {
@@ -54,7 +54,3 @@ variable "collecting_hash" {
     default = ""
 }
 
-variable "emulating_hash" {
-    type = string
-    default = ""
-}

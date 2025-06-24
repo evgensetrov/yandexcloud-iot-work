@@ -3,17 +3,15 @@ import emulator
 import time
 import json
 import os
-
-# DEVICE_ID="areal1og31pb568e2vfo"
-# DEVICE_CLASS="EnvironmentalSensor"
-# DEVICE_TYPE="Temperature"
+import ast
 
 DEVICE_ID = os.getenv("DEVICE_ID")
-DEVICE_CLASS = os.getenv("DEVICE_CLASS")
-DEVICE_TYPE = os.getenv("DEVICE_TYPE")
+
+SENSORS_CLASSES = ast.literal_eval(os.getenv("SENSORS_CLASSES"))
+SENSORS_TYPES = ast.literal_eval(os.getenv("SENSORS_TYPES"))
+SENSORS_IDS = ast.literal_eval(os.getenv("SENSORS_IDS"))
 
 TIME_TO_EMULATE = os.getenv("TIME_TO_EMULATE")  # "NOW" или timestamp
-SENSOR_AMOUNT = int(os.getenv("SENSOR_AMOUNT"))  # количество сенсоров для эмуляции
 
 MQTT_BROKER = "mqtt.cloud.yandex.net"
 MQTT_PORT = 8883
@@ -25,24 +23,24 @@ CLIENT_KEY = "key.pm"
 
 sensor_map = {
     "EnvironmentalSensor": {
-        "Temperature": emulator.Sensor.EnvironmentalSensor.Temperature(sensor_amount=SENSOR_AMOUNT),
-        "Humidity": emulator.Sensor.EnvironmentalSensor.Humidity(sensor_amount=SENSOR_AMOUNT),
-        "AirQuality": emulator.Sensor.EnvironmentalSensor.AirQuality(sensor_amount=SENSOR_AMOUNT),
-        "CO2": emulator.Sensor.EnvironmentalSensor.CO2(sensor_amount=SENSOR_AMOUNT),
-        "Light": emulator.Sensor.EnvironmentalSensor.Light(sensor_amount=SENSOR_AMOUNT),
-        "Noise": emulator.Sensor.EnvironmentalSensor.Noise(sensor_amount=SENSOR_AMOUNT),
-        "WindSpeed": emulator.Sensor.EnvironmentalSensor.WindSpeed(sensor_amount=SENSOR_AMOUNT),
-        "WindDirection": emulator.Sensor.EnvironmentalSensor.WindDirection(sensor_amount=SENSOR_AMOUNT),
-        "Rainfall": emulator.Sensor.EnvironmentalSensor.Rainfall(sensor_amount=SENSOR_AMOUNT),
-        "Pressure": emulator.Sensor.EnvironmentalSensor.Pressure(sensor_amount=SENSOR_AMOUNT)
+        "Temperature": emulator.Sensor.EnvironmentalSensor.Temperature(),
+        "Humidity": emulator.Sensor.EnvironmentalSensor.Humidity(),
+        "AirQuality": emulator.Sensor.EnvironmentalSensor.AirQuality(),
+        "CO2": emulator.Sensor.EnvironmentalSensor.CO2(),
+        "Light": emulator.Sensor.EnvironmentalSensor.Light(),
+        "Noise": emulator.Sensor.EnvironmentalSensor.Noise(),
+        "WindSpeed": emulator.Sensor.EnvironmentalSensor.WindSpeed(),
+        "WindDirection": emulator.Sensor.EnvironmentalSensor.WindDirection(),
+        "Rainfall": emulator.Sensor.EnvironmentalSensor.Rainfall(),
+        "Pressure": emulator.Sensor.EnvironmentalSensor.Pressure()
     },
     "LocationSensor": {
-        "GPS": emulator.Sensor.LocationSensor.GPS(sensor_amount=SENSOR_AMOUNT),
+        "GPS": emulator.Sensor.LocationSensor.GPS(),
     },
     "PowerSensor": {
-        "Voltage": emulator.Sensor.PowerSensor.Voltage(sensor_amount=SENSOR_AMOUNT),
-        "Current": emulator.Sensor.PowerSensor.Current(sensor_amount=SENSOR_AMOUNT),
-        "PowerConsumption": emulator.Sensor.PowerSensor.PowerConsumption(sensor_amount=SENSOR_AMOUNT)
+        "Voltage": emulator.Sensor.PowerSensor.Voltage(),
+        "Current": emulator.Sensor.PowerSensor.Current(),
+        "PowerConsumption": emulator.Sensor.PowerSensor.PowerConsumption()
     }
 }
 
@@ -92,23 +90,23 @@ unit_map = {
     }
 }
 
-sensor = sensor_map[DEVICE_CLASS][DEVICE_TYPE]
+sensors = [sensor_map[SENSORS_CLASSES[i]][SENSORS_TYPES[i]] for i in range(len(SENSORS_CLASSES))]
 
 def handler(event, context):
     if TIME_TO_EMULATE == "NOW":
-        values = sensor.get_values()
 
-        data = json_data = {
+        data = {
             "timestamp": time.time(),
-            "sensorId": DEVICE_ID,
-            "sensorClass": DEVICE_CLASS,
-            "sensorType": DEVICE_TYPE,
+            "deviceId": DEVICE_ID,
             "data": [
                 {
-                    "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
-                    "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
-                    "value": values[i]
-                } for i in range(len(values))
+                    "sendorId": SENSORS_IDS[i],
+                    "sensorClass": SENSORS_CLASSES[i],
+                    "sensorType": SENSORS_TYPES[i],
+                    "parameter": parameter_map[SENSORS_CLASSES[i]][SENSORS_TYPES[i]],
+                    "unit": unit_map[SENSORS_CLASSES[i]][SENSORS_TYPES[i]],
+                    "value": sensors[i].get_value()
+                } for i in range(len(SENSORS_CLASSES))
             ]
         }
         
@@ -120,21 +118,21 @@ def handler(event, context):
         try:
             timestamp = float(TIME_TO_EMULATE)
             time_ = datetime.fromtimestamp(timestamp, timezone)
-            values = sensor.get_values(time_)
         except Exception as e:
             print(f"Произошла ошибка. Проверьте, что переменная TIME_TO_EMULATE имеет тип float или значение 'NOW'.\nОшибка: {str(e)}")
 
-        data = json_data = {
-            "timestamp": timestamp,
-            "sensorId": DEVICE_ID,
-            "sensorClass": DEVICE_CLASS,
-            "sensorType": DEVICE_TYPE,
+        data = {
+            "timestamp": time.time(),
+            "deviceId": DEVICE_ID,
             "data": [
                 {
-                    "parameter": parameter_map[DEVICE_CLASS][DEVICE_TYPE],
-                    "unit": unit_map[DEVICE_CLASS][DEVICE_TYPE],
-                    "value": values[i]
-                } for i in range(len(values))
+                    "sendorId": SENSORS_IDS[i],
+                    "sensorClass": SENSORS_CLASSES[i],
+                    "sensorType": SENSORS_TYPES[i],
+                    "parameter": parameter_map[SENSORS_CLASSES[i]][SENSORS_TYPES[i]],
+                    "unit": unit_map[SENSORS_CLASSES[i]][SENSORS_TYPES[i]],
+                    "value": sensors[i].get_value(time_)
+                } for i in range(len(SENSORS_CLASSES))
             ]
         }
 

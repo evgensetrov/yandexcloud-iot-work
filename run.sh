@@ -61,7 +61,6 @@ echo ""
 cd ..
 echo "--- Вычисление sha256-хэшей для архивов collecting.zip и emulators.zip"
 export TF_VAR_collecting_hash="$(sha256sum collecting.zip)"
-export TF_VAR_emulating_hash="$(sha256sum emulators.zip)"
 echo ""
 
 cd terraform
@@ -75,3 +74,4 @@ echo ""
 
 echo "--- Применение terraform apply"
 terraform apply -auto-approve -parallelism=1
+# terraform destroy
