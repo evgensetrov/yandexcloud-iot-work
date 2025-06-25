@@ -107,7 +107,7 @@ def handler(event, context):
             print(f"Произошла ошибка. Проверьте, что переменная TIME_TO_EMULATE имеет тип float или значение 'NOW'.\nОшибка: {str(e)}")
 
         data = {
-            "timestamp": time.time(),
+            "timestamp": timestamp,
             "deviceId": DEVICE_ID,
             "data": [
                 {
