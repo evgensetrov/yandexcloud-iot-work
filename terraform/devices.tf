@@ -19,12 +19,6 @@ variable "devices" {
       type = "['Temperature', 'Humidity', 'Light', 'Noise']", 
       sensorid = "['91d92bc4-a5cc-49a8-a761-d20125737554', '459054ca-92a9-4b7b-b5d4-fe1e0ff028ec', '45c67c2b-59c6-40f6-b652-b680b340d7b3', '8378d12b-693a-4b54-9485-a1072313a331']"
     }
-    device-3 = {
-      description = "Тестовое устройство с датчиком GPS", 
-      class = "['LocationSensor']",
-      type = "['GPS']",
-      sensorid = "['e5e3fc64-bf48-49e6-abaa-17450ba04473']"
-    }
     device-4 = {
       description = "Тестовое устройство с датчиками напряжения, тока и мощности",
       class = "['PowerSensor', 'PowerSensor', 'PowerSensor']"

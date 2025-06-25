@@ -12,8 +12,6 @@ Sensors:
     - WindDirection
     - Rainfall
     - Pressure
-  LocationSensor:
-    - GPS
   PowerSensor:
     - Voltage
     - Current
