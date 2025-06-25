@@ -43,19 +43,13 @@ cd ..
 # export TF_VAR_device_secret_certificate="$(cat key.pm)"
 # echo ""
 
-echo "--- Попытка удаления старых архивов collecting.zip и emulators.zip"
+echo "--- Попытка удаления старого архива collecting"
 rm collecting.zip
-rm emulators.zip
 echo ""
 
 cd ./collecting
 echo "--- Создание zip-архива для Cloud Function collecting (сбор данных с IoT Core в S3)"
 zip ../collecting  *
-echo ""
-
-cd ../emulators
-echo "--- Создание zip-архива для Cloud Function emulators (эмуляция устройств)"
-zip ../emulators  *
 echo ""
 
 cd ..

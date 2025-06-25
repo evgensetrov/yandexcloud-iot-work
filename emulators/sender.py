@@ -1,7 +1,8 @@
 import ssl
 from paho.mqtt import client as mqtt
+from config import CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC
 
-def connect_mqtt(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT):
+def connect_mqtt():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.tls_set(
         ca_certs=CA_CERT,
@@ -15,14 +16,14 @@ def connect_mqtt(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT):
 
     return client
 
-def send_data(client, MQTT_TOPIC, data):
+def send_data(client, data):
     result = client.publish(MQTT_TOPIC, data)
     result.wait_for_publish() 
     return result
 
-def main(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, data):
-    client = connect_mqtt(CA_CERT, CLIENT_CERT, CLIENT_KEY, MQTT_BROKER, MQTT_PORT)
-    result = send_data(client, MQTT_TOPIC, data)
+def main(data):
+    client = connect_mqtt()
+    result = send_data(client, data)
     client.loop_stop()
     client.disconnect()
     status = result[0]

@@ -186,6 +186,10 @@ data "local_file" "emulator_py" {
   filename = "${path.module}/../emulators/emulator.py"
 }
 
+data "local_file" "config_py" {
+  filename = "${path.module}/../emulators/config.py"
+}
+
 data "local_file" "main_py" {
   filename = "${path.module}/../emulators/main.py"
 }
@@ -222,6 +226,11 @@ resource "archive_file" "emulators_archives" {
   source {
     content  = data.local_file.emulator_py.content
     filename = "emulator.py"
+  }
+
+  source {
+    content  = data.local_file.config_py.content
+    filename = "config.py"
   }
 
   source {
