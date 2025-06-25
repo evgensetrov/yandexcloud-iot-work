@@ -169,7 +169,7 @@ resource "yandex_function_trigger" "collecting-trigger" {
   name        = var.iot_collecting_trigger_name
   description = "Триггер, вызывающий функцию ${var.iot_collecting_function_name}, которая сохраняет данные из устройств реестра ${var.iot_registry_name} в бакет ${var.iot_bucket_name}"
   iot {
-    batch_cutoff    = 5
+    batch_cutoff    = 0
     registry_id     = yandex_iot_core_registry.registry.id
   }
   function {
@@ -300,3 +300,44 @@ resource "yandex_function_trigger" "emulators-trigger" {
     service_account_id  = yandex_iam_service_account.sa.id
   }
 }
+
+//
+// Create a new Yandex Cloud Function (averaging)
+//
+resource "yandex_function" "averaging-function" {
+  folder_id          = yandex_resourcemanager_folder.folder.id
+  name               = var.iot_averaging_function_name
+  description        = "Cloud Function, вызываемая по триггеру ${var.iot_averaging_trigger_name} и усредняющая данные"
+  user_hash          = var.averaging_hash
+  runtime            = "python312"
+  entrypoint         = "index.handler"
+  memory             = "256"
+  execution_timeout  = "300"
+  service_account_id = yandex_iam_service_account.sa.id
+  # todo переделать на secrets, если будет время
+  environment = {
+    ACCESS_KEY  = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+    SECRET_KEY  = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+    BUCKET_NAME = var.iot_bucket_name
+    DB_DSN      = "postgresql://user:postgres@rc1d-4l7rl7uudkcqpecj.mdb.yandexcloud.net/iot"  # todo сделать нормально
+  }
+  content {
+    zip_filename = "../averaging.zip"
+  }
+}
+
+//
+// Create a new Cloud Function Trigger (averaging)
+//
+# resource "yandex_function_trigger" "averaging-trigger" {
+#   folder_id   = yandex_resourcemanager_folder.folder.id
+#   name        = var.iot_averaging_trigger_name
+#   description = "Триггер, вызывающий функцию ${var.iot_averaging_function_name}, которая усредняет данные"
+#   timer {
+#     cron_expression = "* * * * ? *"
+#   }
+#   function {
+#     id                  = yandex_function.averaging-function.id
+#     service_account_id  = yandex_iam_service_account.sa.id
+#   }
+# }

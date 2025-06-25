@@ -43,8 +43,9 @@ cd ..
 # export TF_VAR_device_secret_certificate="$(cat key.pm)"
 # echo ""
 
-echo "--- Попытка удаления старого архива collecting"
+echo "--- Попытка удаления старого архива collecting и averaging"
 rm collecting.zip
+rm averaging.zip
 echo ""
 
 cd ./collecting
@@ -52,9 +53,15 @@ echo "--- Создание zip-архива для Cloud Function collecting (с
 zip ../collecting  *
 echo ""
 
+cd ../averaging
+echo "--- Создание zip-архива для Cloud Function averaging (усреднение данных из S3 и помещение в БД)"
+zip ../averaging  *
+echo ""
+
 cd ..
-echo "--- Вычисление sha256-хэшей для архивов collecting.zip и emulators.zip"
+echo "--- Вычисление sha256-хэшей для архивов collecting.zip и averaging.zip"
 export TF_VAR_collecting_hash="$(sha256sum collecting.zip)"
+export TF_VAR_averaging_hash="$(sha256sum averaging.zip)"
 echo ""
 
 cd terraform

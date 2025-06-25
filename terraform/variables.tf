@@ -38,6 +38,15 @@ variable "iot_collecting_trigger_name" {
     default = "iot-collecting-trigger-spring2025"
 }
 
+variable "iot_averaging_function_name" {
+    type = string
+    default = "iot-averaging-function-spring2025"
+}
+
+variable "iot_averaging_trigger_name" {
+    type = string
+    default = "iot-averaging-trigger-spring2025"
+}
 
 variable "iot_emulating_function_name" {
     type = string
@@ -54,3 +63,7 @@ variable "collecting_hash" {
     default = ""
 }
 
+variable "averaging_hash" {
+    type = string
+    default = ""
+}
