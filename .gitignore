@@ -7,3 +7,6 @@ terraform/.*
 *.tfstate*
 *.zip
 certificates/
+emulators/debug.sh
+.vscode/*
+env.sh
