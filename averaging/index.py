@@ -24,7 +24,7 @@ def handler(event, context):
         datetime_from_key = key.split('/')[-1].split('.')
         key_datetime = datetime.strptime(datetime_from_key[0], "%Y-%m-%d_%H:%M:%S")
 
-        if now.date != key_datetime.date or now.hour > key_datetime.hour:
+        if now.date() != key_datetime.date() or now.hour > key_datetime.hour:
             delete_object(key)
     print(f'Удаляем пустые директории в бакете...')
     delete_old_empty_prefixes()
