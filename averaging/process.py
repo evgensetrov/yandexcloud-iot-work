@@ -27,11 +27,16 @@ def aggregate_entries_by_5min(entries):
 
 def process_files(keys, s3_get_func):
     all_entries = []
-    for key in keys:
+    all_devices = []
+    for i, key in enumerate(keys):
+        if i%100 == 0:
+            print(f'Обработано {i} объектов из {len(keys)}')
         try:
             raw = s3_get_func(key)
             data = parse_json_file(raw)
-            upsert_devices_and_sensors(data["deviceId"], data["data"])
+            if data["deviceId"] not in all_devices:
+                upsert_devices_and_sensors(data["deviceId"], data["data"])
+                all_devices.append(data["deviceId"])
             entries = extract_sensor_entries(data)
             all_entries.extend(entries)
         except Exception as e:
