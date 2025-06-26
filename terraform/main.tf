@@ -302,6 +302,70 @@ resource "yandex_function_trigger" "emulators-trigger" {
 }
 
 //
+// Create a new MDB PostgreSQL Database.
+//
+resource "yandex_mdb_postgresql_database" "my_db" {
+  cluster_id = yandex_mdb_postgresql_cluster.my_cluster.id
+  name       = var.iot_database_name
+  owner      = yandex_mdb_postgresql_user.my_user.name
+  lc_collate = "en_US.UTF-8"
+  lc_type    = "en_US.UTF-8"
+  extension {
+    name = "uuid-ossp"
+  }
+  extension {
+    name = "xml2"
+  }
+}
+
+resource "yandex_mdb_postgresql_user" "my_user" {
+  cluster_id = yandex_mdb_postgresql_cluster.my_cluster.id
+  name       = var.iot_database_user
+  password   = var.iot_database_password
+}
+
+resource "yandex_mdb_postgresql_cluster" "my_cluster" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  name        = var.iot_database_cluster_name
+  environment = "PRESTABLE"
+  network_id  = yandex_vpc_network.foo.id
+
+  config {
+    version = 15
+    resources {
+      resource_preset_id = "c3-c2-m4"
+      disk_type_id       = "network-ssd"
+      disk_size          = 10
+    }
+  }
+
+  host {
+    assign_public_ip = true
+    zone      = "ru-central1-d"
+    subnet_id = yandex_vpc_subnet.foo.id
+  }
+}
+
+// Auxiliary resources
+resource "yandex_vpc_network" "foo" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+}
+
+resource "yandex_vpc_subnet" "foo" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  zone           = "ru-central1-d"
+  network_id     = yandex_vpc_network.foo.id
+  v4_cidr_blocks = ["10.5.0.0/24"]
+}
+
+resource "yandex_vpc_subnet" "foo_compute_instance" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  zone           = "ru-central1-b"
+  network_id     = yandex_vpc_network.foo.id
+  v4_cidr_blocks = ["10.4.0.0/24"]
+}
+
+//
 // Create a new Yandex Cloud Function (averaging)
 //
 resource "yandex_function" "averaging-function" {
@@ -311,15 +375,15 @@ resource "yandex_function" "averaging-function" {
   user_hash          = var.averaging_hash
   runtime            = "python312"
   entrypoint         = "index.handler"
-  memory             = "256"
-  execution_timeout  = "300"
+  memory             = "1024"
+  execution_timeout  = "600"
   service_account_id = yandex_iam_service_account.sa.id
   # todo переделать на secrets, если будет время
   environment = {
     ACCESS_KEY  = yandex_iam_service_account_static_access_key.sa-static-key.access_key
     SECRET_KEY  = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
     BUCKET_NAME = var.iot_bucket_name
-    DB_DSN      = "postgresql://user:postgres@rc1d-4l7rl7uudkcqpecj.mdb.yandexcloud.net/iot"  # todo сделать нормально
+    DB_DSN      = "postgresql://${var.iot_database_user}:${var.iot_database_password}@${yandex_mdb_postgresql_cluster.my_cluster.host[0].fqdn}:6432/${var.iot_database_name}"
   }
   content {
     zip_filename = "../averaging.zip"
@@ -329,15 +393,68 @@ resource "yandex_function" "averaging-function" {
 //
 // Create a new Cloud Function Trigger (averaging)
 //
-# resource "yandex_function_trigger" "averaging-trigger" {
-#   folder_id   = yandex_resourcemanager_folder.folder.id
-#   name        = var.iot_averaging_trigger_name
-#   description = "Триггер, вызывающий функцию ${var.iot_averaging_function_name}, которая усредняет данные"
-#   timer {
-#     cron_expression = "* * * * ? *"
-#   }
-#   function {
-#     id                  = yandex_function.averaging-function.id
-#     service_account_id  = yandex_iam_service_account.sa.id
-#   }
-# }
+resource "yandex_function_trigger" "averaging-trigger" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  name        = var.iot_averaging_trigger_name
+  description = "Триггер, вызывающий функцию ${var.iot_averaging_function_name}, которая усредняет данные"
+  timer {
+    cron_expression = "*/10 * * * ? *"
+  }
+  function {
+    id                  = yandex_function.averaging-function.id
+    service_account_id  = yandex_iam_service_account.sa.id
+  }
+}
+
+//
+// Create a new VPC regular IPv4 Address.
+//
+resource "yandex_vpc_address" "addr" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  name = var.iot_vpc_static_address
+
+  external_ipv4_address {
+    zone_id = "ru-central1-b"
+  }
+}
+
+//
+// Create a new Compute Disk.
+//
+resource "yandex_compute_disk" "my_disk" {
+  name     = var.iot_cloud_disk_name
+  size = 10
+  zone = "ru-central1-b"
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  type     = "network-ssd"
+  image_id = "fd80j21lmqard15ciskf"  # ubuntu 24.04
+}
+
+//
+// Create a new Compute Instance
+//
+resource "yandex_compute_instance" "default" {
+  folder_id   = yandex_resourcemanager_folder.folder.id
+  name        = var.iot_cloud_instance_name
+  zone = "ru-central1-b"
+
+  resources {
+    cores  = 2
+    memory = 2
+  }
+
+  boot_disk {
+    disk_id = yandex_compute_disk.my_disk.id
+  }
+
+  network_interface {
+    nat       = true
+    subnet_id = yandex_vpc_subnet.foo_compute_instance.id
+    nat_ip_address = yandex_vpc_address.addr.external_ipv4_address[0].address
+  }
+
+  metadata = {
+    user-data = "${file("../grafana/cloud-init.yaml")}"
+    ssh-keys = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
+  }
+}

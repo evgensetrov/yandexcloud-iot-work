@@ -1,0 +1,159 @@
+{
+  "id": 1,
+  "type": "timeseries",
+  "title": "Sensor 1",
+  "description": "Какое-то описание",
+  "gridPos": {
+    "x": 2,
+    "y": 0,
+    "h": 8,
+    "w": 12
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "drawStyle": "line",
+        "lineInterpolation": "smooth",
+        "barAlignment": 0,
+        "barWidthFactor": 0.6,
+        "lineWidth": 1,
+        "fillOpacity": 0,
+        "gradientMode": "none",
+        "spanNulls": false,
+        "insertNulls": false,
+        "showPoints": "auto",
+        "pointSize": 5,
+        "stacking": {
+          "mode": "none",
+          "group": "A"
+        },
+        "axisPlacement": "auto",
+        "axisLabel": "",
+        "axisColorMode": "text",
+        "axisBorderShow": false,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "axisCenteredZero": false,
+        "hideFrom": {
+          "tooltip": false,
+          "viz": false,
+          "legend": false
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "color": {
+        "mode": "palette-classic"
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "pluginVersion": "12.0.1+security-01",
+  "targets": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "feq1ypiery4u8d"
+      },
+      "editorMode": "builder",
+      "format": "table",
+      "rawSql": "SELECT \"timestamp\", value FROM averaged_data WHERE sensor_id = '91d92bc4-a5cc-49a8-a761-d20125737554' ORDER BY \"timestamp\" ",
+      "refId": "A",
+      "sql": {
+        "columns": [
+          {
+            "parameters": [
+              {
+                "name": "\"timestamp\"",
+                "type": "functionParameter"
+              }
+            ],
+            "type": "function"
+          },
+          {
+            "parameters": [
+              {
+                "name": "value",
+                "type": "functionParameter"
+              }
+            ],
+            "type": "function"
+          }
+        ],
+        "groupBy": [],
+        "limit": null,
+        "orderBy": {
+          "property": {
+            "name": [
+              "\"timestamp\""
+            ],
+            "type": "string"
+          },
+          "type": "property"
+        },
+        "whereJsonTree": {
+          "children1": [
+            {
+              "id": "aabaaabb-89ab-4cde-b012-3197a8af25b2",
+              "properties": {
+                "field": "sensor_id",
+                "fieldSrc": "field",
+                "operator": "equal",
+                "value": [
+                  "91d92bc4-a5cc-49a8-a761-d20125737554"
+                ],
+                "valueError": [
+                  null
+                ],
+                "valueSrc": [
+                  "value"
+                ],
+                "valueType": [
+                  "text"
+                ]
+              },
+              "type": "rule"
+            }
+          ],
+          "id": "b9abb8ba-0123-4456-b89a-b197a8ab79cf",
+          "type": "group"
+        },
+        "whereString": "sensor_id = '91d92bc4-a5cc-49a8-a761-d20125737554'"
+      },
+      "table": "averaged_data"
+    }
+  ],
+  "datasource": {
+    "type": "grafana-postgresql-datasource",
+    "uid": "feq1ypiery4u8d"
+  },
+  "options": {
+    "tooltip": {
+      "mode": "single",
+      "sort": "none",
+      "hideZeros": false
+    },
+    "legend": {
+      "showLegend": true,
+      "displayMode": "list",
+      "placement": "bottom",
+      "calcs": []
+    }
+  }
+}

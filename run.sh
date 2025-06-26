@@ -4,6 +4,10 @@ export TF_VAR_token=$(yc iam create-token | tr -d '\r\n')
 export TF_VAR_folder_id=$(yc config get folder-id | tr -d '\r\n')
 export TF_VAR_cloud_id=$(yc config get cloud-id | tr -d '\r\n')
 
+# Секреты для создания пользователя базы данных:
+export TF_VAR_iot_database_user="user"
+export TF_VAR_iot_database_password="postgres_password"
+
 echo "--- Ресурсы будут созданы в folder_id:"
 echo $TF_VAR_folder_id
 echo "----- Если id не пуст, то переменные окружения подгружены корректно."
@@ -74,5 +78,5 @@ fi
 echo ""
 
 echo "--- Применение terraform apply"
-terraform apply -auto-approve -parallelism=1
+terraform apply -auto-approve -parallelism=3
 # terraform destroy

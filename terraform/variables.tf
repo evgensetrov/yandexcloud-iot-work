@@ -58,6 +58,42 @@ variable "iot_emulating_trigger_name" {
     default = "emutrig"
 }
 
+variable "iot_database_cluster_name" {
+    type = string
+    default = "iot_database_cluster"
+}
+
+variable "iot_database_name" {
+    type = string
+    default = "iot"
+}
+
+variable "iot_database_user" {
+    type = string
+    default = ""
+}
+
+variable "iot_database_password" {
+    type = string
+    default = ""
+}
+
+variable "iot_cloud_disk_name" {
+    type = string
+    default = "iot-grafana-disk"
+}
+
+variable "iot_vpc_static_address" {
+    type = string
+    default = "iot-grafana-ip"
+}
+
+variable "iot_cloud_instance_name" {
+    type = string
+    default = "iot-grafana"
+}
+
+
 variable "collecting_hash" {
     type = string
     default = ""
