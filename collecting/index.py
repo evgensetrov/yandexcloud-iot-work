@@ -5,11 +5,8 @@ import boto3
 import base64
 import logging
 import json
-
-ACCESS_KEY = os.getenv("ACCESS_KEY")  # key_id из вывода при создании ключа
-SECRET_KEY = os.getenv("SECRET_KEY")  # secret из вывода
-BUCKET_NAME = os.getenv("BUCKET_NAME")  # название бакета, к которому имеет доступ сервисный аккаунт, напр. '17062025-iot-data'
-TIME_ZONE = os.getenv("TIME_ZONE", "Europe/Moscow")
+from jsonschema import validate, ValidationError
+from config import ACCESS_KEY, SECRET_KEY, TIME_ZONE, BUCKET_NAME, schema
 
 session = boto3.session.Session()
 s3 = session.client(
@@ -30,6 +27,9 @@ def handler(event, context):
         device_id = details["device_id"]
         payload_str = base64.b64decode(details["payload"]).decode('utf-8')
         payload = json.loads(payload_str)
+
+        validate(instance=payload, schema=schema)
+
         timestamp = payload["timestamp"]
 
         # now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
@@ -54,6 +54,9 @@ def handler(event, context):
             "statusCode": 200,
             "body": f"Событие успешно обработано, сообщение положено в {key}"
         }
+    
+    except ValidationError as ve:
+        print(f'Произошла ошибка валидации данных: {str(ve)}\nДанные, не прошедшие валидацию:\n{payload_str}') # type: ignore
 
     except Exception as e:
         print(f'Произошла ошибка: {str(e)}')

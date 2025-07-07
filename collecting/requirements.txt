@@ -1,2 +1,3 @@
 boto3==1.38.37
 pytz==2025.2
+jsonschema==4.24.0
